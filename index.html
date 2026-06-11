@@ -25,7 +25,25 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Nanum Square', 'Nanum Gothic', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-.wrap { max-width: 1160px; margin: 0 auto; padding: 22px 18px; }
+.wrap {
+  max-width: 1160px; margin: 0 auto; padding: 22px 18px;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  grid-template-areas:
+    "goal  goal"
+    "reco  reco"
+    "cal   detail"
+    "chart detail"
+    "inj   detail";
+  gap: 14px;
+  align-items: start;
+}
+#goal-bar   { grid-area: goal; }
+#reco-bar   { grid-area: reco; }
+#cal-card   { grid-area: cal; }
+#chart-card { grid-area: chart; }
+#inj-hist-card { grid-area: inj; }
+#detail-panel  { grid-area: detail; }
 
 /* ── Goal bar ── */
 .goal-bar {
@@ -51,87 +69,54 @@ body { font-family: 'Nanum Square', 'Nanum Gothic', -apple-system, BlinkMacSyste
 .btn-import { background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--t2); padding: 7px 13px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: inherit; transition: all .15s; }
 .btn-import:hover { border-color: var(--green); color: var(--green); }
 
-/* ── Layout ── */
-.cols { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
-@media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
-
-/* ── Tablet / Touch responsive ── */
+/* ── Tablet ── */
 @media (max-width: 1024px) {
-  .wrap { padding: 16px 12px; }
-  .cols { grid-template-columns: 1fr 290px; gap: 12px; }
-}
-
-@media (max-width: 768px) {
-  .wrap { padding: 12px 8px; }
-  .cols { grid-template-columns: 1fr; }
-
-  /* Goal bar stacks vertically */
-  .goal-bar { flex-direction: column; align-items: stretch; gap: 10px; }
-  .g-status { margin-left: 0; justify-content: flex-start; flex-wrap: wrap; }
-  .g-div { display: none; }
-  .g-field input { width: 80px; }
-  .btn-goal { width: 100%; padding: 10px; font-size: 14px; }
-
-  /* Reco bar wraps cleanly */
-  .reco-top-row { gap: 14px; }
-  .reco-val { font-size: 20px; }
-
-  /* Calendar — more compact, touch-friendly */
-  .cal-day { min-height: 80px; padding: 5px 3px 20px; gap: 2px; }
-  .cal-day .dn { font-size: 15px; width: 28px; height: 28px; }
-  .wchip { font-size: 12px; }
-  .kcal-chip, .protein-chip { font-size: 10px; }
-  .ex-stamp { font-size: 8px; padding: 2px 2px 2px; }
-
-  /* Detail panel full width */
-  .detail-panel { border-radius: 12px; }
-
-  /* Chart */
-  .chart-wrap { height: 160px; }
-
-  /* Touch-friendly buttons */
-  button { min-height: 36px; }
-  .btn-del { min-width: 36px; min-height: 36px; font-size: 16px; }
-  .ex-chip { padding: 7px 10px; font-size: 13px; }
-
-  /* Diet rows */
-  .diet-row-bottom input[type=number] { font-size: 13px; padding: 6px; }
-  .diet-row-top input[type=text] { font-size: 14px; }
+  .wrap { padding: 16px 12px; grid-template-columns: 1fr 290px; gap: 12px; }
 }
 
 /* ── Phone ── */
 @media (max-width: 480px) {
-  .wrap { padding: 10px 6px; }
+  .wrap {
+    padding: 10px 8px;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "reco"
+      "cal"
+      "detail"
+      "chart"
+      "inj"
+      "goal";
+    gap: 10px;
+  }
 
-  /* Goal bar: 가로 스크롤 한 줄 유지 */
-  .goal-bar { padding: 10px 12px; gap: 8px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .g-field input { width: 62px; font-size: 13px; padding: 5px 6px; }
+  /* Goal bar 최하단, 세로 스택 */
+  #goal-bar { flex-wrap: wrap; gap: 8px; }
+  .g-div { display: none; }
+  .g-field { flex: 1 1 auto; }
+  .g-field input { width: 70px; font-size: 13px; padding: 5px 6px; }
   .g-field label { font-size: 10px; }
-  .btn-goal, .btn-export, .btn-import { padding: 6px 10px; font-size: 11px; min-height: 32px; }
+  .btn-goal, .btn-export, .btn-import { flex: 1; padding: 8px; font-size: 12px; }
 
-  /* Reco bar: 세로 스택 */
+  /* Reco bar */
   .reco-bar { padding: 10px 12px 8px; }
-  .reco-top-row { gap: 16px; flex-wrap: wrap; }
+  .reco-top-row { gap: 14px; flex-wrap: wrap; }
   .reco-val { font-size: 18px; }
   .reco-label { font-size: 9px; }
   .reco-sub { font-size: 10px; }
-  .reco-insight-row { font-size: 12px; }
+  .reco-insight-row { font-size: 12px; margin-top: 8px; padding-top: 8px; }
   .btn-inbody { font-size: 11px; padding: 6px 10px; }
 
-  /* Calendar: 셀 높이 줄이고 핵심 정보만 */
-  .cal-day { min-height: 72px; padding: 4px 2px 18px; gap: 2px; }
-  .cal-day .dn { font-size: 14px; width: 26px; height: 26px; }
-  .wchip { font-size: 12px; padding: 1px 3px; }
-  .kcal-chip { font-size: 9px; }
-  .protein-chip { font-size: 9px; }
+  /* Calendar: 폰 가로에 맞춤 */
+  .cal-day { min-height: 66px; padding: 3px 2px 17px; gap: 1px; }
+  .cal-day .dn { font-size: 12px; width: 22px; height: 22px; font-weight: 700; }
+  .wchip { font-size: 11px; padding: 1px 3px; }
+  .kcal-chip, .protein-chip { font-size: 9px; }
   .pred-chip { font-size: 9px; padding: 1px 3px; }
-  .ex-stamp { font-size: 8px; }
+  .ex-stamp { font-size: 7px; padding: 2px; }
   .cal-nav h2 { font-size: 15px; }
 
-  /* 상세 패널: 터치 친화적 */
-  .detail-panel { padding: 14px 12px; }
-  .card { padding: 12px; }
-  .card + .card { margin-top: 10px; }
+  /* Cards */
+  .card { padding: 12px 10px; }
 
   /* 운동 칩 */
   .ex-chip { padding: 8px 10px; font-size: 13px; }
@@ -140,12 +125,9 @@ body { font-family: 'Nanum Square', 'Nanum Gothic', -apple-system, BlinkMacSyste
   .diet-row { padding: 6px 8px; }
   .diet-row-top input[type=text] { font-size: 13px; }
   .diet-row-bottom input[type=number] { font-size: 12px; padding: 5px 4px; }
-  .num-label { font-size: 10px; }
 
   /* 차트 */
-  .chart-wrap { height: 140px; }
-
-  /* 통계 카드 */
+  .chart-wrap { height: 150px; }
   .stat .v { font-size: 15px; }
   .stat .l { font-size: 9px; }
 }
@@ -426,7 +408,7 @@ select option { background: var(--s2); }
 <div class="wrap">
 
 <!-- ── Goal Bar ── -->
-<div class="goal-bar">
+<div class="goal-bar" id="goal-bar">
   <span class="goal-bar-title">🎯 목표</span>
   <div class="g-field">
     <label>목표 체중</label>
@@ -501,44 +483,22 @@ select option { background: var(--s2); }
   </div>
 </div>
 
-<div class="cols">
-  <!-- ── LEFT ── -->
-  <div>
-    <!-- Calendar -->
-    <div class="card">
-      <div class="cal-nav">
-        <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
-        <h2 id="cal-title"></h2>
-        <button class="nav-btn" onclick="changeMonth(1)">›</button>
-      </div>
-      <div class="cal-grid">
-        <div class="cal-dow">일</div><div class="cal-dow">월</div><div class="cal-dow">화</div>
-        <div class="cal-dow">수</div><div class="cal-dow">목</div><div class="cal-dow">금</div><div class="cal-dow">토</div>
-      </div>
-      <div class="cal-grid" id="cal-body"></div>
-    </div>
-
-    <!-- Chart -->
-    <div class="card">
-      <div class="card-title">체중 추이</div>
-      <div class="stats-row" id="weight-stats"></div>
-      <div class="chart-nav">
-        <button class="nav-btn" id="chart-prev" onclick="changeChartPage(-1)" title="이전 기간">‹</button>
-        <span class="chart-range" id="chart-range"></span>
-        <button class="nav-btn" id="chart-next" onclick="changeChartPage(1)" title="최신 기간">›</button>
-      </div>
-      <div class="chart-wrap"><canvas id="chart"></canvas></div>
-    </div>
-
-    <!-- Mounjaro history -->
-    <div class="card" id="inj-hist-card">
-      <div class="card-title">💉 마운자로 접종 기록</div>
-      <div class="inj-hist" id="inj-hist"></div>
-    </div>
+<!-- Calendar -->
+<div class="card" id="cal-card">
+  <div class="cal-nav">
+    <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+    <h2 id="cal-title"></h2>
+    <button class="nav-btn" onclick="changeMonth(1)">›</button>
   </div>
+  <div class="cal-grid">
+    <div class="cal-dow">일</div><div class="cal-dow">월</div><div class="cal-dow">화</div>
+    <div class="cal-dow">수</div><div class="cal-dow">목</div><div class="cal-dow">금</div><div class="cal-dow">토</div>
+  </div>
+  <div class="cal-grid" id="cal-body"></div>
+</div>
 
-  <!-- ── RIGHT: Detail Panel ── -->
-  <div class="card" id="detail-panel">
+<!-- Detail Panel -->
+<div class="card" id="detail-panel">
     <div class="detail-header">
       <div>
         <h3 id="d-title">날짜를 선택하세요</h3>
@@ -601,7 +561,25 @@ select option { background: var(--s2); }
       <button class="btn btn-a btn-w" onclick="saveDiet()">식단 저장</button>
     </div>
   </div>
+
+<!-- Chart -->
+<div class="card" id="chart-card">
+  <div class="card-title">체중 추이</div>
+  <div class="stats-row" id="weight-stats"></div>
+  <div class="chart-nav">
+    <button class="nav-btn" id="chart-prev" onclick="changeChartPage(-1)" title="이전 기간">‹</button>
+    <span class="chart-range" id="chart-range"></span>
+    <button class="nav-btn" id="chart-next" onclick="changeChartPage(1)" title="최신 기간">›</button>
+  </div>
+  <div class="chart-wrap"><canvas id="chart"></canvas></div>
 </div>
+
+<!-- Mounjaro history -->
+<div class="card" id="inj-hist-card">
+  <div class="card-title">💉 마운자로 접종 기록</div>
+  <div class="inj-hist" id="inj-hist"></div>
+</div>
+
 </div>
 <div id="toast"></div>
 
@@ -1095,7 +1073,12 @@ function saveDiet() {
 
 // ── Chart (6-month pages) ──
 let chartInst = null;
-const PAGE = 180; // max entries per page
+const PAGE_PC = 180;
+const PAGE_MOBILE = 90; // ~3개월
+
+function getPageSize() {
+  return window.innerWidth <= 480 ? PAGE_MOBILE : PAGE_PC;
+}
 
 function changeChartPage(dir) {
   chartPageOffset += dir;
@@ -1117,6 +1100,7 @@ function renderChart() {
     return;
   }
 
+  const PAGE = getPageSize();
   const total = allEntries.length;
   const endIdx = Math.max(1, total + chartPageOffset * PAGE);
   const startIdx = Math.max(0, endIdx - PAGE);
