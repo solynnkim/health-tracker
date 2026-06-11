@@ -99,12 +99,55 @@ body { font-family: 'Nanum Square', 'Nanum Gothic', -apple-system, BlinkMacSyste
   .diet-row-top input[type=text] { font-size: 14px; }
 }
 
-/* Portrait phone — ultra compact calendar */
+/* ── Phone ── */
 @media (max-width: 480px) {
-  .cal-day { min-height: 64px; padding: 4px 2px 18px; }
-  .cal-day .dn { font-size: 13px; width: 24px; height: 24px; }
-  .wchip { font-size: 11px; }
-  .kcal-chip, .protein-chip { font-size: 9px; }
+  .wrap { padding: 10px 6px; }
+
+  /* Goal bar: 가로 스크롤 한 줄 유지 */
+  .goal-bar { padding: 10px 12px; gap: 8px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .g-field input { width: 62px; font-size: 13px; padding: 5px 6px; }
+  .g-field label { font-size: 10px; }
+  .btn-goal, .btn-export, .btn-import { padding: 6px 10px; font-size: 11px; min-height: 32px; }
+
+  /* Reco bar: 세로 스택 */
+  .reco-bar { padding: 10px 12px 8px; }
+  .reco-top-row { gap: 16px; flex-wrap: wrap; }
+  .reco-val { font-size: 18px; }
+  .reco-label { font-size: 9px; }
+  .reco-sub { font-size: 10px; }
+  .reco-insight-row { font-size: 12px; }
+  .btn-inbody { font-size: 11px; padding: 6px 10px; }
+
+  /* Calendar: 셀 높이 줄이고 핵심 정보만 */
+  .cal-day { min-height: 72px; padding: 4px 2px 18px; gap: 2px; }
+  .cal-day .dn { font-size: 14px; width: 26px; height: 26px; }
+  .wchip { font-size: 12px; padding: 1px 3px; }
+  .kcal-chip { font-size: 9px; }
+  .protein-chip { font-size: 9px; }
+  .pred-chip { font-size: 9px; padding: 1px 3px; }
+  .ex-stamp { font-size: 8px; }
+  .cal-nav h2 { font-size: 15px; }
+
+  /* 상세 패널: 터치 친화적 */
+  .detail-panel { padding: 14px 12px; }
+  .card { padding: 12px; }
+  .card + .card { margin-top: 10px; }
+
+  /* 운동 칩 */
+  .ex-chip { padding: 8px 10px; font-size: 13px; }
+
+  /* 식단 */
+  .diet-row { padding: 6px 8px; }
+  .diet-row-top input[type=text] { font-size: 13px; }
+  .diet-row-bottom input[type=number] { font-size: 12px; padding: 5px 4px; }
+  .num-label { font-size: 10px; }
+
+  /* 차트 */
+  .chart-wrap { height: 140px; }
+
+  /* 통계 카드 */
+  .stat .v { font-size: 15px; }
+  .stat .l { font-size: 9px; }
 }
 .card { background: var(--s1); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
 .card + .card { margin-top: 14px; }
