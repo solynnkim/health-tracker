@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>건강 기록</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Nanum+Square:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e0e14;
+  --s1: #16161e;
+  --s2: #1d1d27;
+  --s3: #252530;
+  --border: #2c2c3a;
+  --accent: #7c6ef5;
+  --green: #3ecfa0;
+  --orange: #f5a030;
+  --red: #f05555;
+  --pink: #f06090;
+  --text: #eaeaf2;
+  --t2: #8888a8;
+  --t3: #44445a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Nanum Square', 'Nanum Gothic', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+.wrap { max-width: 1160px; margin: 0 auto; padding: 22px 18px; }
+
+/* ── Goal bar ── */
+.goal-bar {
+  background: var(--s1); border: 1px solid var(--border); border-radius: 14px;
+  padding: 12px 18px; margin-bottom: 18px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: nowrap; overflow-x: auto;
+}
+.goal-bar-title { font-size: 12px; font-weight: 700; color: var(--t2); white-space: nowrap; }
+.g-field { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.g-field label { font-size: 11px; color: var(--t3); white-space: nowrap; }
+.g-field input {
+  background: var(--s2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 8px; color: var(--text); font-size: 14px; font-weight: 700;
+  width: 72px; outline: none; transition: border-color .15s;
+}
+.g-field input:focus { border-color: var(--accent); }
+.g-field .unit { font-size: 12px; color: var(--t2); }
+.g-div { width: 1px; height: 22px; background: var(--border); flex-shrink: 0; }
+.btn-goal { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.btn-goal:hover { background: #6a5ce0; }
+.btn-export { background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--t2); padding: 7px 13px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: inherit; transition: all .15s; }
+.btn-export:hover { border-color: var(--accent); color: var(--accent); }
+.btn-import { background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--t2); padding: 7px 13px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: inherit; transition: all .15s; }
+.btn-import:hover { border-color: var(--green); color: var(--green); }
+
+/* ── Layout ── */
+.cols { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
+@media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
+
+/* ── Tablet / Touch responsive ── */
+@media (max-width: 1024px) {
+  .wrap { padding: 16px 12px; }
+  .cols { grid-template-columns: 1fr 290px; gap: 12px; }
+}
+
+@media (max-width: 768px) {
+  .wrap { padding: 12px 8px; }
+  .cols { grid-template-columns: 1fr; }
+
+  /* Goal bar stacks vertically */
+  .goal-bar { flex-direction: column; align-items: stretch; gap: 10px; }
+  .g-status { margin-left: 0; justify-content: flex-start; flex-wrap: wrap; }
+  .g-div { display: none; }
+  .g-field input { width: 80px; }
+  .btn-goal { width: 100%; padding: 10px; font-size: 14px; }
+
+  /* Reco bar wraps cleanly */
+  .reco-top-row { gap: 14px; }
+  .reco-val { font-size: 20px; }
+
+  /* Calendar — more compact, touch-friendly */
+  .cal-day { min-height: 80px; padding: 5px 3px 20px; gap: 2px; }
+  .cal-day .dn { font-size: 15px; width: 28px; height: 28px; }
+  .wchip { font-size: 12px; }
+  .kcal-chip, .protein-chip { font-size: 10px; }
+  .ex-stamp { font-size: 8px; padding: 2px 2px 2px; }
+
+  /* Detail panel full width */
+  .detail-panel { border-radius: 12px; }
+
+  /* Chart */
+  .chart-wrap { height: 160px; }
+
+  /* Touch-friendly buttons */
+  button { min-height: 36px; }
+  .btn-del { min-width: 36px; min-height: 36px; font-size: 16px; }
+  .ex-chip { padding: 7px 10px; font-size: 13px; }
+
+  /* Diet rows */
+  .diet-row-bottom input[type=number] { font-size: 13px; padding: 6px; }
+  .diet-row-top input[type=text] { font-size: 14px; }
+}
+
+/* Portrait phone — ultra compact calendar */
+@media (max-width: 480px) {
+  .cal-day { min-height: 64px; padding: 4px 2px 18px; }
+  .cal-day .dn { font-size: 13px; width: 24px; height: 24px; }
+  .wchip { font-size: 11px; }
+  .kcal-chip, .protein-chip { font-size: 9px; }
+}
+.card { background: var(--s1); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+.card + .card { margin-top: 14px; }
+.card-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--t3); margin-bottom: 12px; }
+
+/* ── Calendar ── */
+.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.cal-nav h2 { font-size: 16px; font-weight: 700; }
+.nav-btn { background: var(--s3); border: none; color: var(--t2); width: 28px; height: 28px; border-radius: 7px; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; }
+.nav-btn:hover { color: var(--text); background: var(--border); }
+.nav-btn:disabled { opacity: .3; cursor: default; }
+
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-dow { text-align: center; font-size: 10px; color: var(--t3); font-weight: 700; padding: 2px 0 8px; }
+
+.cal-day {
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: border-color .12s, background .12s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 120px;
+  padding: 6px 4px 24px;  /* bottom padding for stamp strip */
+  position: relative;
+  overflow: hidden;
+  gap: 3px;
+}
+.cal-day:hover { background: var(--s3); }
+.cal-day.today { border-color: var(--accent) !important; }
+.cal-day.selected { background: rgba(124,110,245,.12); border-color: var(--accent); }
+.cal-day.other-month { opacity: .22; pointer-events: none; }
+
+/* Date number */
+.cal-day .dn {
+  font-size: 16px; font-weight: 800; color: var(--text); line-height: 1.3;
+  width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; flex-shrink: 0;
+}
+.cal-day.today .dn { color: var(--accent); }
+/* Mounjaro ring on date */
+.cal-day .dn.inj-ring {
+  border: 2px solid var(--orange);
+  color: var(--orange);
+  font-weight: 800;
+}
+.cal-day.today .dn.inj-ring { color: var(--orange); border-color: var(--orange); }
+
+/* Chips inside cell */
+.wchip {
+  font-size: 14px; font-weight: 800; line-height: 1.2;
+  background: rgba(124,110,245,.45); color: #fff;
+  padding: 2px 4px; border-radius: 4px; width: 100%; text-align: center;
+}
+.kcal-chip { font-size: 11px; font-weight: 800; line-height: 1.3; }
+.kcal-chip.ok      { color: var(--green); }
+.kcal-chip.over    { color: var(--red); }
+.kcal-chip.neutral { color: var(--t2); }
+.protein-chip { font-size: 11px; font-weight: 800; line-height: 1.3; color: #7ab4f5; }
+.protein-chip.met  { color: var(--green); }
+.period-chip { font-size: 11px; line-height: 1.2; }
+.pred-chip {
+  font-size: 10px; font-weight: 800; line-height: 1;
+  background: rgba(240,96,144,.25); color: rgba(255,180,200,.9);
+  padding: 2px 5px; border-radius: 4px; width: 100%; text-align: center;
+}
+.cal-day .dn.pred-ring {
+  border: 1.5px dashed rgba(240,96,144,.45);
+  border-radius: 50%;
+  color: rgba(240,96,144,.65);
+}
+
+/* Exercise stamp — bottom strip, does NOT overlap top content */
+.ex-stamp {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(62,207,160,.18);
+  border-top: 1.5px solid rgba(62,207,160,.45);
+  text-align: center;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .03em;
+  color: var(--green);
+  padding: 2px 2px 3px;
+  border-radius: 0 0 9px 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Weight chart section ── */
+.insight-box {
+  background: rgba(124,110,245,.08);
+  border: 1px solid rgba(124,110,245,.2);
+  border-radius: 9px;
+  padding: 9px 14px;
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.insight-box.period { background: rgba(240,96,144,.08); border-color: rgba(240,96,144,.25); }
+
+.stats-row { display: flex; gap: 9px; margin-bottom: 14px; flex-wrap: wrap; }
+.stat { flex: 1; min-width: 80px; background: var(--s2); border-radius: 9px; padding: 10px 11px; }
+.stat .l { font-size: 10px; color: var(--t3); margin-bottom: 3px; }
+.stat .v { font-size: 17px; font-weight: 700; }
+.stat .s { font-size: 10px; color: var(--t2); margin-top: 2px; }
+.v.up { color: var(--red); }
+.v.dn { color: var(--green); }
+.v.gok { color: var(--green); }
+.v.gfar { color: var(--orange); }
+
+.chart-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.chart-range { font-size: 11px; color: var(--t2); font-weight: 600; }
+.chart-wrap { height: 175px; position: relative; }
+
+/* ── Injection history ── */
+.inj-hist { display: flex; flex-wrap: wrap; gap: 5px; }
+.inj-badge { background: rgba(245,160,48,.12); border: 1px solid rgba(245,160,48,.3); border-radius: 6px; padding: 3px 9px; font-size: 11px; color: var(--orange); font-weight: 600; }
+
+/* ── Right panel ── */
+.detail-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+.detail-header h3 { font-size: 15px; font-weight: 700; }
+.detail-sub { font-size: 11px; color: var(--t2); margin-top: 3px; }
+.saved-ok { font-size: 11px; color: var(--green); font-weight: 700; opacity: 0; transition: opacity .25s; white-space: nowrap; }
+.saved-ok.show { opacity: 1; }
+
+.sec-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--t3); margin: 13px 0 7px; }
+.sec-lbl:first-of-type { margin-top: 0; }
+
+/* Weight */
+.w-row { display: flex; gap: 7px; align-items: center; }
+.w-unit { display: flex; align-items: center; background: var(--s2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.w-unit input { background: none; border: none; padding: 7px 10px; color: var(--text); font-size: 22px; font-weight: 700; width: 90px; outline: none; }
+.w-unit span { padding-right: 9px; color: var(--t2); font-size: 12px; }
+
+.btn { padding: 7px 13px; border-radius: 8px; border: none; cursor: pointer; font-size: 12px; font-weight: 700; transition: all .13s; }
+.btn-a { background: var(--accent); color: #fff; }
+.btn-a:hover { background: #6a5ce0; }
+.btn-g { background: var(--s3); color: var(--t2); }
+.btn-g:hover { color: var(--text); }
+.btn-w { width: 100%; margin-top: 7px; padding: 8px; }
+.btn-del { background: none; border: none; color: var(--t3); cursor: pointer; font-size: 16px; padding: 2px 4px; }
+.btn-del:hover { color: var(--red); }
+
+/* Exercise chips */
+.ex-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
+.ex-chip {
+  background: var(--s2); border: 1px solid var(--border); border-radius: 9px;
+  padding: 9px 4px; text-align: center; cursor: pointer; font-size: 11px;
+  color: var(--t2); transition: all .13s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.ex-chip .ei { font-size: 22px; }
+.ex-chip:hover { border-color: var(--accent); color: var(--text); }
+.ex-chip.on { background: rgba(62,207,160,.12); border-color: var(--green); color: var(--green); font-weight: 700; }
+
+textarea.memo {
+  width: 100%; background: var(--s2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 10px; color: var(--text); font-size: 12px; outline: none; resize: none;
+  min-height: 46px; font-family: inherit; transition: border-color .13s;
+}
+textarea.memo:focus { border-color: var(--accent); }
+textarea.memo::placeholder { color: var(--t3); }
+
+/* Toggle rows */
+.toggle-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.toggler { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.tbox {
+  width: 38px; height: 22px; background: var(--s3); border-radius: 11px;
+  position: relative; transition: background .2s; border: 1px solid var(--border); flex-shrink: 0;
+}
+.tknob {
+  width: 16px; height: 16px; background: var(--t3); border-radius: 50%;
+  position: absolute; top: 2px; left: 2px; transition: all .2s;
+}
+.tbox.on-inj { background: rgba(245,160,48,.25); border-color: var(--orange); }
+.tbox.on-inj .tknob { left: 18px; background: var(--orange); }
+.tbox.on-period { background: rgba(240,96,144,.25); border-color: var(--pink); }
+.tbox.on-period .tknob { left: 18px; background: var(--pink); }
+.tlabel { font-size: 13px; font-weight: 600; color: var(--t2); }
+.tlabel.inj-on { color: var(--orange); }
+.tlabel.period-on { color: var(--pink); }
+
+select, input[type=text], input[type=number] {
+  background: var(--s2); border: 1px solid var(--border); border-radius: 7px;
+  padding: 6px 8px; color: var(--text); font-family: inherit; font-size: 12px; outline: none; transition: border-color .13s;
+}
+select:focus, input:focus { border-color: var(--accent); }
+select option { background: var(--s2); }
+
+.inj-dose { font-size: 12px; }
+
+/* Diet */
+.diet-rows { display: flex; flex-direction: column; gap: 6px; }
+.diet-row { display: flex; flex-direction: column; gap: 3px; background: var(--s2); border-radius: 8px; padding: 6px 8px; }
+.diet-row-top { display: flex; gap: 4px; align-items: center; }
+.diet-row-top select { flex: 0 0 46px; font-size: 11px; padding: 4px 3px; background: var(--s3); border: 1px solid var(--border); border-radius: 6px; color: var(--text); outline: none; }
+.diet-row-top input[type=text] { flex: 1; min-width: 0; font-size: 13px; }
+.diet-row-bottom { display: flex; gap: 4px; align-items: center; }
+.diet-row-bottom input[type=number] { flex: 1; font-size: 11px; padding: 4px 6px; text-align: center; }
+.diet-row-bottom .num-label { font-size: 10px; color: var(--t3); white-space: nowrap; }
+.add-row {
+  background: var(--s3); border: 1px dashed var(--border); border-radius: 7px;
+  padding: 6px; color: var(--t3); cursor: pointer; font-size: 12px; text-align: center;
+  margin-top: 5px; transition: all .13s;
+}
+.add-row:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Reco bar */
+.reco-bar {
+  background: var(--s1); border: 1px solid var(--border); border-radius: 12px;
+  padding: 12px 18px 10px; margin-bottom: 14px; margin-top: -4px;
+  display: flex; flex-direction: column; gap: 0;
+}
+.reco-top-row { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+.reco-insight-row {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 13px; color: var(--t2); line-height: 1.5;
+}
+.reco-item { display: flex; flex-direction: column; gap: 2px; }
+.reco-label { font-size: 10px; color: var(--t3); font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+.reco-val { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.1; }
+.reco-val.highlight { color: var(--accent); }
+.reco-sub { font-size: 11px; color: var(--t2); margin-top: 1px; }
+.reco-sub.gap-ok { color: var(--green); font-weight: 700; }
+.reco-sub.gap-work { color: var(--orange); font-weight: 700; }
+.reco-div { width: 1px; background: var(--border); align-self: stretch; }
+
+/* Inbody button */
+.btn-inbody {
+  margin-left: auto; background: rgba(124,110,245,.15); border: 1px solid rgba(124,110,245,.4);
+  color: var(--accent); border-radius: 9px; padding: 8px 14px; font-size: 12px;
+  font-weight: 800; cursor: pointer; white-space: nowrap; transition: all .15s;
+  font-family: inherit;
+}
+.btn-inbody:hover { background: rgba(124,110,245,.28); }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-box {
+  background: var(--s1); border: 1px solid var(--border); border-radius: 16px;
+  padding: 24px; width: 400px; max-width: 95vw; z-index: 501; position: relative;
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.modal-head h3 { font-size: 16px; font-weight: 800; }
+.modal-close { background: var(--s3); border: none; color: var(--t2); width: 28px; height: 28px; border-radius: 7px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; font-family: inherit; }
+.modal-close:hover { color: var(--text); }
+.modal-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.m-field { display: flex; flex-direction: column; gap: 5px; }
+.m-field label { font-size: 11px; color: var(--t3); font-weight: 700; }
+.m-field input { background: var(--s2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; color: var(--text); font-size: 14px; font-weight: 700; outline: none; font-family: inherit; transition: border-color .13s; }
+.m-field input:focus { border-color: var(--accent); }
+.m-field.full { grid-column: 1/-1; }
+.btn-modal-save { width: 100%; padding: 10px; background: var(--accent); color: #fff; border: none; border-radius: 9px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.btn-modal-save:hover { background: #6a5ce0; }
+.inbody-hist-list { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
+.inbody-hist-row { background: var(--s2); border-radius: 8px; padding: 9px 12px; font-size: 12px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.inbody-hist-date { font-weight: 800; color: var(--accent); flex: 0 0 55px; }
+.inbody-hist-val { color: var(--t2); }
+.inbody-hist-val strong { color: var(--text); }
+
+/* Toast */
+#toast { position: fixed; bottom: 18px; right: 18px; background: var(--s2); border: 1px solid var(--border); border-left: 3px solid var(--green); padding: 9px 15px; border-radius: 8px; font-size: 13px; opacity: 0; transform: translateY(6px); transition: all .18s; z-index: 999; }
+#toast.show { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ── Goal Bar ── -->
+<div class="goal-bar">
+  <span class="goal-bar-title">🎯 목표</span>
+  <div class="g-field">
+    <label>목표 체중</label>
+    <input type="number" id="g-weight" step="0.1" placeholder="65.0">
+    <span class="unit">kg</span>
+  </div>
+  <div class="g-div"></div>
+  <div class="g-field">
+    <label>일일 칼로리</label>
+    <input type="number" id="g-kcal" placeholder="1700">
+    <span class="unit">kcal</span>
+  </div>
+  <div class="g-div"></div>
+  <div class="g-field">
+    <label>목표 체지방률</label>
+    <input type="number" id="g-fat" step="0.1" placeholder="20">
+    <span class="unit">%</span>
+  </div>
+  <div class="g-field">
+    <label>목표 골격근량</label>
+    <input type="number" id="g-muscle" step="0.1" placeholder="30">
+    <span class="unit">kg↑</span>
+  </div>
+  <button class="btn-goal" onclick="saveGoal()">저장</button>
+  <button class="btn-export" onclick="exportData()">📤 내보내기</button>
+  <button class="btn-import" onclick="document.getElementById('import-file').click()">📥 가져오기</button>
+  <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
+</div>
+<div class="reco-bar" id="reco-bar" style="display:none">
+  <button class="btn-inbody" onclick="openInbody()">📊 인바디 기록하기</button>
+</div>
+
+<!-- Inbody Modal -->
+<div class="modal-overlay" id="inbody-modal" style="display:none" onclick="if(event.target===this)closeInbody()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>📊 인바디 기록</h3>
+      <button class="modal-close" onclick="closeInbody()">×</button>
+    </div>
+    <div class="modal-fields">
+      <div class="m-field full">
+        <label>측정일</label>
+        <input type="date" id="ib-date">
+      </div>
+      <div class="m-field">
+        <label>체중 (kg)</label>
+        <input type="number" id="ib-weight" step="0.1" placeholder="69.2">
+      </div>
+      <div class="m-field">
+        <label>기초대사량 (kcal)</label>
+        <input type="number" id="ib-bmr" placeholder="1508">
+      </div>
+      <div class="m-field">
+        <label>골격근량 (kg)</label>
+        <input type="number" id="ib-muscle" step="0.1" placeholder="29.1">
+      </div>
+      <div class="m-field">
+        <label>체지방량 (kg)</label>
+        <input type="number" id="ib-fatkg" step="0.1" placeholder="16.6">
+      </div>
+      <div class="m-field">
+        <label>체지방률 (%)</label>
+        <input type="number" id="ib-fat" step="0.1" placeholder="24.0">
+      </div>
+      <div class="m-field">
+        <label>체수분 (L, 선택)</label>
+        <input type="number" id="ib-water" step="0.1" placeholder="">
+      </div>
+    </div>
+    <button class="btn-modal-save" onclick="saveInbody()">저장</button>
+    <div class="inbody-hist-list" id="inbody-hist-list"></div>
+  </div>
+</div>
+
+<div class="cols">
+  <!-- ── LEFT ── -->
+  <div>
+    <!-- Calendar -->
+    <div class="card">
+      <div class="cal-nav">
+        <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+        <h2 id="cal-title"></h2>
+        <button class="nav-btn" onclick="changeMonth(1)">›</button>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-dow">일</div><div class="cal-dow">월</div><div class="cal-dow">화</div>
+        <div class="cal-dow">수</div><div class="cal-dow">목</div><div class="cal-dow">금</div><div class="cal-dow">토</div>
+      </div>
+      <div class="cal-grid" id="cal-body"></div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card">
+      <div class="card-title">체중 추이</div>
+      <div class="stats-row" id="weight-stats"></div>
+      <div class="chart-nav">
+        <button class="nav-btn" id="chart-prev" onclick="changeChartPage(-1)" title="이전 기간">‹</button>
+        <span class="chart-range" id="chart-range"></span>
+        <button class="nav-btn" id="chart-next" onclick="changeChartPage(1)" title="최신 기간">›</button>
+      </div>
+      <div class="chart-wrap"><canvas id="chart"></canvas></div>
+    </div>
+
+    <!-- Mounjaro history -->
+    <div class="card" id="inj-hist-card">
+      <div class="card-title">💉 마운자로 접종 기록</div>
+      <div class="inj-hist" id="inj-hist"></div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT: Detail Panel ── -->
+  <div class="card" id="detail-panel">
+    <div class="detail-header">
+      <div>
+        <h3 id="d-title">날짜를 선택하세요</h3>
+        <div class="detail-sub" id="d-sub">캘린더에서 날짜를 클릭하면 기록할 수 있어요</div>
+      </div>
+      <span class="saved-ok" id="saved-ok">저장됨 ✓</span>
+    </div>
+
+    <div id="d-content" style="display:none">
+
+      <!-- Weight -->
+      <div class="sec-lbl">⚖️ 체중</div>
+      <div class="w-row">
+        <div class="w-unit">
+          <input type="number" id="inp-w" step="0.1" min="20" max="300" placeholder="0.0">
+          <span>kg</span>
+        </div>
+        <button class="btn btn-a" onclick="saveWeight()">저장</button>
+        <button class="btn btn-g" id="del-w" onclick="delWeight()" style="display:none">삭제</button>
+      </div>
+
+      <!-- Exercise -->
+      <div class="sec-lbl">🏃 운동</div>
+      <div class="ex-grid">
+        <div class="ex-chip" data-type="크로스핏" onclick="toggleEx(this)"><span class="ei">🔥</span>크로스핏</div>
+        <div class="ex-chip" data-type="헬스" onclick="toggleEx(this)"><span class="ei">🏋️</span>헬스</div>
+        <div class="ex-chip" data-type="달리기" onclick="toggleEx(this)"><span class="ei">🏃</span>달리기</div>
+        <div class="ex-chip" data-type="기타" onclick="toggleEx(this)"><span class="ei">💦</span>기타</div>
+      </div>
+      <textarea class="memo" id="inp-ex-memo" placeholder="세트 수, 거리, 시간 등..." onblur="saveEx()"></textarea>
+
+      <!-- Mounjaro -->
+      <div class="sec-lbl">💉 마운자로</div>
+      <div class="toggle-row">
+        <div class="toggler" onclick="toggleInj()">
+          <div class="tbox" id="inj-box"><div class="tknob"></div></div>
+          <span class="tlabel" id="inj-lbl">접종 안 함</span>
+        </div>
+        <div id="inj-dose-wrap" style="display:none">
+          <select class="inj-dose" id="inj-dose" onchange="saveInj()">
+            <option>2.5mg</option><option>5mg</option><option>7.5mg</option>
+            <option>10mg</option><option>12.5mg</option><option>15mg</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Period -->
+      <div class="sec-lbl">🩸 생리</div>
+      <div class="toggle-row">
+        <div class="toggler" onclick="togglePeriod()">
+          <div class="tbox" id="period-box"><div class="tknob"></div></div>
+          <span class="tlabel" id="period-lbl">생리 시작일 아님</span>
+        </div>
+      </div>
+
+      <!-- Diet -->
+      <div class="sec-lbl">🥗 식단</div>
+      <div class="diet-rows" id="diet-list"></div>
+      <div class="add-row" onclick="addDietRow()">+ 식사 추가</div>
+      <button class="btn btn-a btn-w" onclick="saveDiet()">식단 저장</button>
+    </div>
+  </div>
+</div>
+</div>
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ── Storage ──
+const DB = {
+  g: k => JSON.parse(localStorage.getItem(k) || '{}'),
+  s: (k,v) => localStorage.setItem(k, JSON.stringify(v)),
+  goal: () => JSON.parse(localStorage.getItem('hc_goal') || 'null'),
+  setGoal: v => localStorage.setItem('hc_goal', JSON.stringify(v)),
+};
+
+const todayStr = (() => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+})();
+
+let curYear, curMonth, selectedDate = null, chartPageOffset = 0;
+
+function dkey(y, m, d) {
+  return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+// ── Goal ──
+function saveGoal() {
+  const gw = parseFloat(document.getElementById('g-weight').value) || null;
+  const gk = parseInt(document.getElementById('g-kcal').value)     || null;
+  const gf = parseFloat(document.getElementById('g-fat').value)    || null;
+  const gm = parseFloat(document.getElementById('g-muscle').value) || null;
+  DB.setGoal({ weight: gw, kcal: gk, fat: gf, muscle: gm });
+  renderGoalStatus(); renderRecoBar(); renderCal(); renderChart(); renderWeightStats();
+  toast('목표 저장됨');
+}
+
+function renderGoalStatus() {
+  const goal = DB.goal();
+  if (!goal) return;
+  if (goal.weight) document.getElementById('g-weight').value = goal.weight;
+  if (goal.kcal)   document.getElementById('g-kcal').value   = goal.kcal;
+  if (goal.fat)    document.getElementById('g-fat').value    = goal.fat;
+  if (goal.muscle) document.getElementById('g-muscle').value = goal.muscle;
+}
+
+function renderRecoBar() {
+  const goal = DB.goal();
+  const bar = document.getElementById('reco-bar');
+  bar.style.display = 'flex'; // 인바디 버튼은 항상 노출
+
+  if (!goal || (!goal.fat && !goal.muscle)) {
+    bar.innerHTML = '<button class="btn-inbody" onclick="openInbody()">📊 인바디 기록하기</button>';
+    return;
+  }
+
+  // 최신 인바디 데이터 (기록 없으면 사용자 제공 초기값 사용)
+  const inbodyData = DB.g('hc_inbody');
+  const inbodySorted = Object.entries(inbodyData).sort((a,b) => a[0].localeCompare(b[0]));
+  const latest = inbodySorted.length ? inbodySorted[inbodySorted.length-1][1] : null;
+  const curFat    = latest?.fat    ?? 24.0;
+  const curMuscle = latest?.muscle ?? 29.1;
+  const latestDate = inbodySorted.length ? inbodySorted[inbodySorted.length-1][0] : null;
+
+  // 현재 체중 (인바디 기록 우선, 없으면 체중 기록)
+  const ws = DB.g('hc_weights');
+  const wEntries = Object.entries(ws).sort((a,b) => a[0].localeCompare(b[0]));
+  const currentW = (latest?.weight) || (wEntries.length ? wEntries[wEntries.length-1][1] : 69);
+
+  // 단백질 권장량: 근육 증가 목표 있으면 1.7g/kg, 아니면 1.5g/kg
+  const hasMuscleGoal = goal.muscle && goal.muscle > curMuscle;
+  const proteinRate = hasMuscleGoal ? 1.7 : 1.5;
+  const recoProt = Math.round(currentW * proteinRate);
+  const proteinKcal = recoProt * 4;
+  const proteinPct = goal.kcal ? Math.round(proteinKcal / goal.kcal * 100) : null;
+
+  const inbodyNote = latestDate
+    ? `<span style="font-size:10px;color:var(--t3)">최근 인바디: ${latestDate}</span>`
+    : `<span style="font-size:10px;color:var(--orange)">⚠ 인바디 기록 없음 — 초기값 기준</span>`;
+
+  const topItems = [];
+  if (goal.fat) {
+    const fatDiff = (curFat - goal.fat).toFixed(1);
+    const fatCls = fatDiff > 0 ? 'gap-work' : 'gap-ok';
+    const fatNote = fatDiff > 0 ? `목표까지 -${fatDiff}%` : `목표 달성!`;
+    topItems.push(`
+      <div class="reco-item">
+        <span class="reco-label">목표 체지방률</span>
+        <span class="reco-val highlight">${goal.fat}%</span>
+        <span class="reco-sub ${fatCls}">현재 ${curFat}% · ${fatNote}</span>
+      </div>`);
+  }
+  if (goal.fat && goal.muscle) topItems.push('<div class="reco-div"></div>');
+  if (goal.muscle) {
+    const muscleDiff = (goal.muscle - curMuscle).toFixed(1);
+    const muscleCls = muscleDiff > 0 ? 'gap-work' : 'gap-ok';
+    const muscleNote = muscleDiff > 0 ? `목표까지 +${muscleDiff}kg` : `목표 달성!`;
+    topItems.push(`
+      <div class="reco-item">
+        <span class="reco-label">목표 골격근량</span>
+        <span class="reco-val highlight">${goal.muscle}kg</span>
+        <span class="reco-sub ${muscleCls}">현재 ${curMuscle}kg · ${muscleNote}</span>
+      </div>`);
+  }
+  topItems.push('<div class="reco-div"></div>');
+  topItems.push(`
+    <div class="reco-item">
+      <span class="reco-label">💡 단백질 목표</span>
+      <span class="reco-val" style="color:#7ab4f5">${recoProt}g</span>
+      <span class="reco-sub">${currentW}kg × ${proteinRate}g/kg${proteinPct ? ` · 칼로리의 ${proteinPct}%` : ''}</span>
+    </div>`);
+  topItems.push(`<button class="btn-inbody" onclick="openInbody()" style="margin-left:auto;align-self:center">📊 인바디</button>`);
+
+  bar.innerHTML =
+    `<div class="reco-top-row">${topItems.join('')}</div>` +
+    `<div class="reco-insight-row"><span style="font-size:10px;color:var(--t3);font-weight:700;margin-right:8px">📊 오늘의 인사이트</span><span id="insight-box">—</span></div>`;
+
+  // 단백질 목표를 goal.protein에 자동 저장 (캘린더 달성 표시용)
+  const saved = DB.goal();
+  if (saved && saved.protein !== recoProt) {
+    saved.protein = recoProt;
+    DB.setGoal(saved);
+  }
+}
+
+// ── Calendar ──
+function initCal() {
+  const now = new Date();
+  curYear = now.getFullYear(); curMonth = now.getMonth();
+  renderCal(); selectDate(todayStr);
+}
+
+function changeMonth(d) {
+  curMonth += d;
+  if (curMonth > 11) { curMonth = 0; curYear++; }
+  if (curMonth < 0)  { curMonth = 11; curYear--; }
+  renderCal();
+}
+
+function renderCal() {
+  const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  document.getElementById('cal-title').textContent = `${curYear}년 ${months[curMonth]}`;
+
+  const W = DB.g('hc_weights'), E = DB.g('hc_exercises');
+  const D = DB.g('hc_diets'), I = DB.g('hc_inj'), P = DB.g('hc_period');
+  const goal = DB.goal();
+  const predicted = getPredictedPeriodDates(P);
+
+  const firstDay = new Date(curYear, curMonth, 1).getDay();
+  const daysInMonth = new Date(curYear, curMonth+1, 0).getDate();
+  const prevDays = new Date(curYear, curMonth, 0).getDate();
+
+  const body = document.getElementById('cal-body');
+  body.innerHTML = '';
+
+  const mk = (y, m, d) => {
+    let realM = m, realY = y;
+    if (m < 0)  { realM = 11; realY = y - 1; }
+    if (m > 11) { realM = 0;  realY = y + 1; }
+    return dkey(realY, realM, d);
+  };
+
+  for (let i = firstDay-1; i >= 0; i--)
+    body.appendChild(makeDay(mk(curYear, curMonth-1, prevDays-i), prevDays-i, true, W, E, D, I, P, goal, predicted));
+  for (let d = 1; d <= daysInMonth; d++)
+    body.appendChild(makeDay(dkey(curYear, curMonth, d), d, false, W, E, D, I, P, goal, predicted));
+  const total = firstDay + daysInMonth;
+  const rem = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let d = 1; d <= rem; d++)
+    body.appendChild(makeDay(mk(curYear, curMonth+1, d), d, true, W, E, D, I, P, goal, predicted));
+}
+
+function makeDay(k, d, other, W, E, D, I, P, goal, predicted) {
+  const el = document.createElement('div');
+  el.className = 'cal-day'
+    + (other ? ' other-month' : '')
+    + (k === todayStr ? ' today' : '')
+    + (k === selectedDate ? ' selected' : '');
+  el.dataset.key = k;
+  el.onclick = () => selectDate(k);
+
+  const hasW = W[k] != null;
+  const hasE = E[k] && E[k].types && E[k].types.length > 0;
+  const hasInj = I[k] != null;
+  const hasPeriod = P[k] === true;
+  const dietRows = D[k] || [];
+  const totalKcal = dietRows.reduce((s, r) => s + (r.kcal || 0), 0);
+
+  // 생리 예정 — 해당 월에 실제 기록 없을 때만
+  const cellYM = k.slice(0,7);
+  const hasActualPeriodThisMonth = Object.keys(P).some(pk => pk.startsWith(cellYM) && P[pk] === true);
+  const predIdx = (!hasActualPeriodThisMonth && predicted) ? predicted.indexOf(k) : -1;
+
+  // Date number — mounjaro ring / pred-ring
+  let dnClass = 'dn';
+  if (hasInj) dnClass += ' inj-ring';
+  else if (predIdx === 0) dnClass += ' pred-ring'; // 예정 첫날만 링
+  let inner = `<span class="${dnClass}">${d}</span>`;
+
+  if (hasW) inner += `<span class="wchip">${W[k]}kg</span>`;
+
+  if (totalKcal > 0) {
+    let cls = 'neutral';
+    if (goal && goal.kcal) cls = totalKcal > goal.kcal ? 'over' : 'ok';
+    inner += `<span class="kcal-chip ${cls}">${totalKcal.toLocaleString()}kcal</span>`;
+  }
+
+  const totalProtein = dietRows.reduce((s, r) => s + (r.protein || 0), 0);
+  if (totalProtein > 0) {
+    const pCls = (goal && goal.protein && totalProtein >= goal.protein) ? 'met' : '';
+    inner += `<span class="protein-chip ${pCls}">단백질 ${totalProtein}g</span>`;
+  }
+
+  if (hasPeriod) {
+    inner += `<span class="period-chip">🩸</span>`;
+  } else if (predIdx >= 0) {
+    inner += `<span class="pred-chip">${predIdx === 0 ? '🩸예정' : '···'}</span>`;
+  }
+
+  // Exercise stamp — 운동 종류 표시
+  if (hasE) {
+    const exIcons = { '크로스핏':'🔥', '헬스':'🏋️', '달리기':'🏃', '기타':'💦' };
+    const types = E[k].types;
+    const stampText = types.length === 1
+      ? `${exIcons[types[0]] || '💪'} ${types[0]}`
+      : types.map(t => exIcons[t] || '💪').join('');
+    inner += `<div class="ex-stamp">${stampText}</div>`;
+  }
+
+  el.innerHTML = inner;
+  return el;
+}
+
+// ── Predicted Period Dates ──
+function getPredictedPeriodDates(P) {
+  const periodDates = Object.keys(P).filter(k => P[k] === true).sort();
+  if (!periodDates.length) return [];
+
+  // 평균 주기 계산 (2회 이상 기록 시)
+  let cycleLen = 28;
+  if (periodDates.length >= 2) {
+    const diffs = [];
+    for (let i = 1; i < periodDates.length; i++) {
+      const diff = Math.floor((new Date(periodDates[i]) - new Date(periodDates[i-1])) / 86400000);
+      if (diff >= 20 && diff <= 45) diffs.push(diff);
+    }
+    if (diffs.length) cycleLen = Math.round(diffs.reduce((a,b) => a+b,0) / diffs.length);
+  }
+
+  const lastStart = new Date(periodDates[periodDates.length-1]);
+  const nextStart = new Date(lastStart);
+  nextStart.setDate(nextStart.getDate() + cycleLen);
+
+  // 예정 5일치 반환
+  return Array.from({ length: 5 }, (_, i) => {
+    const d = new Date(nextStart);
+    d.setDate(d.getDate() + i);
+    return d.toISOString().slice(0, 10);
+  });
+}
+
+// ── Select Date ──
+function selectDate(k) {
+  selectedDate = k;
+  document.querySelectorAll('.cal-day').forEach(el => el.classList.toggle('selected', el.dataset.key === k));
+
+  const [y, m, d] = k.split('-').map(Number);
+  const dow = ['일','월','화','수','목','금','토'][new Date(y, m-1, d).getDay()];
+  document.getElementById('d-title').textContent = `${m}월 ${d}일 (${dow})`;
+  document.getElementById('d-sub').textContent = k === todayStr ? '오늘' : '';
+  document.getElementById('d-content').style.display = 'block';
+
+  // Weight
+  const w = DB.g('hc_weights')[k];
+  document.getElementById('inp-w').value = w != null ? w : '';
+  document.getElementById('del-w').style.display = w != null ? '' : 'none';
+
+  // Exercise
+  const ex = DB.g('hc_exercises')[k] || { types: [], memo: '' };
+  document.querySelectorAll('.ex-chip').forEach(c => c.classList.toggle('on', ex.types.includes(c.dataset.type)));
+  document.getElementById('inp-ex-memo').value = ex.memo || '';
+
+  // Mounjaro
+  setInjUI(DB.g('hc_inj')[k] || null);
+
+  // Period
+  setPeriodUI(DB.g('hc_period')[k] === true);
+
+  // Diet
+  renderDietList(DB.g('hc_diets')[k] || []);
+}
+
+// ── Weight ──
+function saveWeight() {
+  if (!selectedDate) return;
+  const val = parseFloat(document.getElementById('inp-w').value);
+  if (isNaN(val)) return toast('체중을 입력하세요');
+  const w = DB.g('hc_weights');
+  w[selectedDate] = val;
+  DB.s('hc_weights', w);
+  document.getElementById('del-w').style.display = '';
+  ok(); renderCal(); renderChart(); renderWeightStats(); renderGoalStatus(); renderInsight();
+}
+function delWeight() {
+  if (!selectedDate) return;
+  const w = DB.g('hc_weights');
+  delete w[selectedDate];
+  DB.s('hc_weights', w);
+  document.getElementById('inp-w').value = '';
+  document.getElementById('del-w').style.display = 'none';
+  renderCal(); renderChart(); renderWeightStats(); renderGoalStatus(); renderInsight();
+}
+
+// ── Exercise ──
+function toggleEx(chip) { chip.classList.toggle('on'); saveEx(); }
+function saveEx() {
+  if (!selectedDate) return;
+  const types = [...document.querySelectorAll('.ex-chip.on')].map(c => c.dataset.type);
+  const memo = document.getElementById('inp-ex-memo').value.trim();
+  const ex = DB.g('hc_exercises');
+  if (!types.length && !memo) delete ex[selectedDate];
+  else ex[selectedDate] = { types, memo };
+  DB.s('hc_exercises', ex);
+  ok(); renderCal();
+}
+
+// ── Mounjaro ──
+function setInjUI(inj) {
+  const box = document.getElementById('inj-box');
+  const lbl = document.getElementById('inj-lbl');
+  const dw  = document.getElementById('inj-dose-wrap');
+  if (inj) {
+    box.className = 'tbox on-inj'; box.innerHTML = '<div class="tknob"></div>';
+    lbl.textContent = '접종 완료 💉'; lbl.className = 'tlabel inj-on';
+    dw.style.display = 'flex';
+    document.getElementById('inj-dose').value = inj.dose || '5mg';
+  } else {
+    box.className = 'tbox'; box.innerHTML = '<div class="tknob"></div>';
+    lbl.textContent = '접종 안 함'; lbl.className = 'tlabel';
+    dw.style.display = 'none';
+  }
+}
+function toggleInj() {
+  const isOn = document.getElementById('inj-box').classList.contains('on-inj');
+  setInjUI(isOn ? null : { dose: '5mg' });
+  saveInj();
+}
+function saveInj() {
+  if (!selectedDate) return;
+  const isOn = document.getElementById('inj-box').classList.contains('on-inj');
+  const inj = DB.g('hc_inj');
+  if (isOn) inj[selectedDate] = { dose: document.getElementById('inj-dose').value };
+  else delete inj[selectedDate];
+  DB.s('hc_inj', inj);
+  ok(); renderCal(); renderInjHist();
+}
+function renderInjHist() {
+  const inj = DB.g('hc_inj');
+  const sorted = Object.entries(inj).sort((a,b) => b[0].localeCompare(a[0])).slice(0,20);
+  const el = document.getElementById('inj-hist');
+  el.innerHTML = sorted.length
+    ? sorted.map(([k,v]) => { const [,m,d] = k.split('-').map(Number); return `<span class="inj-badge">${m}/${d} ${v.dose}</span>`; }).join('')
+    : '<span style="font-size:12px;color:var(--t3)">기록 없음</span>';
+}
+
+// ── InBody ──
+function openInbody() {
+  const today = todayStr;
+  document.getElementById('ib-date').value = today;
+  // 기존 기록 있으면 로드
+  const data = DB.g('hc_inbody');
+  const sorted = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0]));
+  if (sorted.length) {
+    const latest = sorted[0][1];
+    document.getElementById('ib-weight').value = latest.weight || '';
+    document.getElementById('ib-bmr').value    = latest.bmr    || '';
+    document.getElementById('ib-muscle').value = latest.muscle || '';
+    document.getElementById('ib-fatkg').value  = latest.fatkg  || '';
+    document.getElementById('ib-fat').value    = latest.fat    || '';
+    document.getElementById('ib-water').value  = latest.water  || '';
+  }
+  renderInbodyHist();
+  document.getElementById('inbody-modal').style.display = 'flex';
+}
+
+function closeInbody() {
+  document.getElementById('inbody-modal').style.display = 'none';
+}
+
+function saveInbody() {
+  const date = document.getElementById('ib-date').value || todayStr;
+  const entry = {
+    weight: parseFloat(document.getElementById('ib-weight').value) || null,
+    bmr:    parseInt(document.getElementById('ib-bmr').value)      || null,
+    muscle: parseFloat(document.getElementById('ib-muscle').value) || null,
+    fatkg:  parseFloat(document.getElementById('ib-fatkg').value)  || null,
+    fat:    parseFloat(document.getElementById('ib-fat').value)    || null,
+    water:  parseFloat(document.getElementById('ib-water').value)  || null,
+  };
+  if (!entry.weight && !entry.fat && !entry.muscle) return toast('최소 하나의 수치를 입력하세요');
+  const data = DB.g('hc_inbody');
+  data[date] = entry;
+  DB.s('hc_inbody', data);
+  renderInbodyHist();
+  renderRecoBar();
+  toast('✅ 인바디 기록 저장');
+}
+
+function renderInbodyHist() {
+  const data = DB.g('hc_inbody');
+  const sorted = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0])).slice(0,5);
+  const el = document.getElementById('inbody-hist-list');
+  if (!sorted.length) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-top:14px;margin-bottom:6px">기존 기록</div>' +
+    sorted.map(([k,v]) => {
+      const [,m,d] = k.split('-').map(Number);
+      const parts = [];
+      if (v.weight) parts.push(`체중 <strong>${v.weight}kg</strong>`);
+      if (v.fat)    parts.push(`체지방 <strong>${v.fat}%</strong>`);
+      if (v.muscle) parts.push(`골격근 <strong>${v.muscle}kg</strong>`);
+      if (v.bmr)    parts.push(`기초대사 <strong>${v.bmr}kcal</strong>`);
+      return `<div class="inbody-hist-row">
+        <span class="inbody-hist-date">${m}/${d}</span>
+        <span class="inbody-hist-val">${parts.join(' · ')}</span>
+      </div>`;
+    }).join('');
+}
+
+// ── Period ──
+function setPeriodUI(on) {
+  const box = document.getElementById('period-box');
+  const lbl = document.getElementById('period-lbl');
+  if (on) {
+    box.className = 'tbox on-period'; box.innerHTML = '<div class="tknob"></div>';
+    lbl.textContent = '생리 시작일 🩸'; lbl.className = 'tlabel period-on';
+  } else {
+    box.className = 'tbox'; box.innerHTML = '<div class="tknob"></div>';
+    lbl.textContent = '생리 시작일 아님'; lbl.className = 'tlabel';
+  }
+}
+function togglePeriod() {
+  const isOn = document.getElementById('period-box').classList.contains('on-period');
+  setPeriodUI(!isOn);
+  savePeriod();
+}
+function savePeriod() {
+  if (!selectedDate) return;
+  const isOn = document.getElementById('period-box').classList.contains('on-period');
+  const p = DB.g('hc_period');
+  if (isOn) p[selectedDate] = true; else delete p[selectedDate];
+  DB.s('hc_period', p);
+  ok(); renderCal(); renderInsight();
+}
+
+// ── Diet ──
+let dietTemp = [];
+function renderDietList(rows) {
+  dietTemp = rows.map(r => ({...r}));
+  document.getElementById('diet-list').innerHTML = dietTemp.map((r, i) => `
+    <div class="diet-row">
+      <div class="diet-row-top">
+        <select onchange="dietTemp[${i}].meal=this.value">
+          ${['아침','점심','저녁','간식'].map(m => `<option ${r.meal===m?'selected':''}>${m}</option>`).join('')}
+        </select>
+        <input type="text" placeholder="메뉴명" value="${r.food||''}" oninput="dietTemp[${i}].food=this.value">
+      </div>
+      <div class="diet-row-bottom">
+        <span class="num-label">kcal</span>
+        <input type="number" placeholder="0" value="${r.kcal||''}" oninput="dietTemp[${i}].kcal=+this.value||0">
+        <span class="num-label">단백질</span>
+        <input type="number" placeholder="0g" value="${r.protein||''}" oninput="dietTemp[${i}].protein=+this.value||0">
+        <button class="btn-del" onclick="removeDietRow(${i})">×</button>
+      </div>
+    </div>`).join('');
+}
+function addDietRow() {
+  dietTemp.push({ meal: '점심', food: '', kcal: 0, protein: 0 });
+  renderDietList(dietTemp);
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('.diet-row input[type=text]');
+    if (inputs.length) inputs[inputs.length-1].focus();
+  }, 30);
+}
+function removeDietRow(i) { dietTemp.splice(i,1); renderDietList(dietTemp); }
+function saveDiet() {
+  if (!selectedDate) return;
+  const d = DB.g('hc_diets');
+  const filtered = dietTemp.filter(r => r.food || r.kcal);
+  if (!filtered.length) delete d[selectedDate]; else d[selectedDate] = filtered;
+  DB.s('hc_diets', d);
+  ok(); renderCal();
+}
+
+// ── Chart (6-month pages) ──
+let chartInst = null;
+const PAGE = 180; // max entries per page
+
+function changeChartPage(dir) {
+  chartPageOffset += dir;
+  if (chartPageOffset > 0) chartPageOffset = 0;
+  renderChart();
+}
+
+function renderChart() {
+  const weights = DB.g('hc_weights');
+  const allEntries = Object.entries(weights).sort((a,b) => a[0].localeCompare(b[0]));
+
+  const prevBtn = document.getElementById('chart-prev');
+  const nextBtn = document.getElementById('chart-next');
+
+  if (!allEntries.length) {
+    document.getElementById('chart-range').textContent = '기록 없음';
+    prevBtn.disabled = true; nextBtn.disabled = true;
+    if (chartInst) { chartInst.destroy(); chartInst = null; }
+    return;
+  }
+
+  const total = allEntries.length;
+  const endIdx = Math.max(1, total + chartPageOffset * PAGE);
+  const startIdx = Math.max(0, endIdx - PAGE);
+  const slice = allEntries.slice(startIdx, endIdx);
+
+  prevBtn.disabled = startIdx <= 0;
+  nextBtn.disabled = chartPageOffset >= 0;
+
+  const startLabel = slice[0][0].slice(0,7).replace('-','.');
+  const endLabel   = slice[slice.length-1][0].slice(0,7).replace('-','.');
+  document.getElementById('chart-range').textContent = startLabel === endLabel ? startLabel : `${startLabel} ~ ${endLabel}`;
+
+  const labels = slice.map(([k]) => { const [,m,d] = k.split('-'); return `${+m}/${+d}`; });
+  const data   = slice.map(([,v]) => v);
+  const goal = DB.goal();
+
+  const ctx = document.getElementById('chart');
+  if (chartInst) chartInst.destroy();
+
+  const mn = Math.min(...data) - 1.5, mx = Math.max(...data) + 1.5;
+
+  const datasets = [{
+    data, borderColor: '#7c6ef5', backgroundColor: 'rgba(124,110,245,0.07)',
+    fill: true, tension: 0.4,
+    pointRadius: data.length > 30 ? 2 : 4,
+    pointBackgroundColor: '#7c6ef5',
+  }];
+
+  if (goal && goal.weight) {
+    datasets.push({
+      data: labels.map(() => goal.weight),
+      borderColor: 'rgba(62,207,160,.45)', borderDash: [5,4],
+      pointRadius: 0, fill: false, tension: 0,
+    });
+  }
+
+  chartInst = new Chart(ctx, {
+    type: 'line', data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.raw} kg` } } },
+      scales: {
+        x: { grid: { color: '#2c2c3a' }, ticks: { color: '#44445a', font: { size: 10 } } },
+        y: { grid: { color: '#2c2c3a' }, ticks: { color: '#44445a', font: { size: 10 }, callback: v => v+'kg' }, min: mn, max: mx }
+      }
+    }
+  });
+}
+
+// ── Weight Stats ──
+function renderWeightStats() {
+  const ws = DB.g('hc_weights');
+  const entries = Object.entries(ws).sort((a,b) => a[0].localeCompare(b[0]));
+  const el = document.getElementById('weight-stats');
+  if (!entries.length) { el.innerHTML = ''; return; }
+
+  const latest = entries[entries.length-1][1];
+  const goal = DB.goal();
+
+  // vs 7 days ago
+  const sevenAgo = new Date(); sevenAgo.setDate(sevenAgo.getDate() - 7);
+  const sevenKey = sevenAgo.toISOString().slice(0,10);
+  const sevenEntry = entries.filter(([k]) => k <= sevenKey).pop();
+  const diffWeek = sevenEntry ? (latest - sevenEntry[1]).toFixed(1) : null;
+
+  // This month avg vs last month avg
+  const now = new Date();
+  const thisYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const lastDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
+  const lastYM = `${lastDate.getFullYear()}-${String(lastDate.getMonth()+1).padStart(2,'0')}`;
+  const thisMonthVals = entries.filter(([k]) => k.startsWith(thisYM)).map(([,v]) => v);
+  const lastMonthVals = entries.filter(([k]) => k.startsWith(lastYM)).map(([,v]) => v);
+  const thisAvg = thisMonthVals.length ? (thisMonthVals.reduce((a,b)=>a+b,0)/thisMonthVals.length).toFixed(1) : null;
+  const lastAvg = lastMonthVals.length ? (lastMonthVals.reduce((a,b)=>a+b,0)/lastMonthVals.length).toFixed(1) : null;
+  const monthDiff = thisAvg && lastAvg ? (thisAvg - lastAvg).toFixed(1) : null;
+
+  let html = `<div class="stat"><div class="l">현재 체중</div><div class="v">${latest} kg</div><div class="s">${entries[entries.length-1][0]}</div></div>`;
+
+  if (diffWeek != null) {
+    const cls = +diffWeek > 0 ? 'up' : +diffWeek < 0 ? 'dn' : '';
+    html += `<div class="stat"><div class="l">7일 전 대비</div><div class="v ${cls}">${+diffWeek>0?'+':''}${diffWeek} kg</div><div class="s">${sevenEntry[0]}</div></div>`;
+  }
+
+  if (monthDiff != null) {
+    const cls = +monthDiff > 0 ? 'up' : +monthDiff < 0 ? 'dn' : '';
+    html += `<div class="stat"><div class="l">이달 평균</div><div class="v ${cls}">${+monthDiff>0?'+':''}${monthDiff} kg</div><div class="s">지난달 ${lastAvg}kg 대비</div></div>`;
+  }
+
+  if (goal && goal.weight) {
+    const toGoal = (latest - goal.weight).toFixed(1);
+    const cls = +toGoal <= 0 ? 'gok' : 'gfar';
+    html += `<div class="stat"><div class="l">목표까지</div><div class="v ${cls}">${+toGoal<=0?'🎉':toGoal+' kg'}</div><div class="s">목표 ${goal.weight} kg</div></div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+// ── Insight ──
+function renderInsight() {
+  const ws = DB.g('hc_weights');
+  const entries = Object.entries(ws).sort((a,b) => a[0].localeCompare(b[0]));
+  const P = DB.g('hc_period');
+  const E = DB.g('hc_exercises');
+
+  const box = document.getElementById('insight-box');
+  if (!box) return; // reco-bar가 아직 렌더링 안 됐을 때
+
+  const setText = t => { box.textContent = t; };
+
+  if (entries.length < 2) {
+    setText('체중을 2일 이상 기록하면 인사이트가 표시됩니다.');
+    return;
+  }
+
+  const latest = entries[entries.length-1][1];
+  const goal = DB.goal();
+
+  // 생리 주기 체크
+  const periodDates = Object.keys(P).sort();
+  const lastPeriod = periodDates.length ? periodDates[periodDates.length-1] : null;
+  const daysSincePeriod = lastPeriod
+    ? Math.floor((new Date(todayStr) - new Date(lastPeriod)) / 86400000)
+    : null;
+
+  if (daysSincePeriod !== null) {
+    if (daysSincePeriod >= 0 && daysSincePeriod <= 4) {
+      setText(`🩸 생리 ${daysSincePeriod+1}일차 — 체중 증가는 수분 보유 때문이에요. 걱정 마세요!`); return;
+    }
+    if (daysSincePeriod >= 5 && daysSincePeriod <= 13) {
+      setText(`🌱 여포기(${daysSincePeriod+1}일차) — 대사 활발, 운동 효과가 가장 좋은 시기예요!`); return;
+    }
+    if (daysSincePeriod >= 14 && daysSincePeriod <= 17) {
+      setText(`🥚 배란기 — 체온·체중 소폭 상승 가능. 수분 충분히 드세요.`); return;
+    }
+    if (daysSincePeriod >= 18 && daysSincePeriod <= 30) {
+      setText(`🌙 황체기(${daysSincePeriod+1}일차) — 부종으로 체중 증가 가능. 생리 후 자연히 빠져요.`); return;
+    }
+  }
+
+  // 일반 체중 추이
+  const recent = entries.slice(-7);
+  const diff7 = +(recent[recent.length-1][1] - recent[0][1]).toFixed(1);
+  const weekStart = (() => {
+    const d = new Date(); d.setDate(d.getDate() - d.getDay() + 1);
+    return d.toISOString().slice(0,10);
+  })();
+  const exThisWeek = Object.keys(E).filter(k => k >= weekStart).length;
+
+  if (diff7 > 1.5) { setText(`📈 최근 7일 +${diff7}kg. 나트륨·탄수화물 점검 필요. 이번 주 운동 ${exThisWeek}회.`); return; }
+  if (diff7 < -1)  { setText(`📉 최근 7일 ${diff7}kg 감량! 좋은 흐름이에요 💪 이번 주 운동 ${exThisWeek}회.`); return; }
+  if (Math.abs(diff7) <= 0.5 && recent.length >= 5) {
+    setText(goal && goal.weight && latest > goal.weight
+      ? `➡️ 체중 정체 중. 칼로리 목표 재점검하거나 운동 강도를 높여보세요.`
+      : `✅ 체중 안정 유지 중. 이번 주 운동 ${exThisWeek}회 — 꾸준히 가고 있어요!`);
+    return;
+  }
+  setText(`💡 최근 7일 ${diff7>0?'+':''}${diff7}kg 변화. 이번 주 운동 ${exThisWeek}회.`);
+}
+
+// ── Helpers ──
+function ok() {
+  const el = document.getElementById('saved-ok');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1800);
+}
+function exportData() {
+  const keys = ['hc_weights','hc_exercises','hc_diets','hc_inj','hc_period','hc_inbody','hc_goal'];
+  const data = {};
+  keys.forEach(k => {
+    const v = localStorage.getItem(k);
+    if (v) data[k] = JSON.parse(v);
+  });
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `health-backup-${today}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('📤 데이터 내보내기 완료');
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const keys = ['hc_weights','hc_exercises','hc_diets','hc_inj','hc_period','hc_inbody','hc_goal'];
+      let count = 0;
+      keys.forEach(k => {
+        if (data[k] !== undefined) {
+          localStorage.setItem(k, JSON.stringify(data[k]));
+          count++;
+        }
+      });
+      input.value = '';
+      toast(`📥 데이터 가져오기 완료 (${count}개 항목)`);
+      // 화면 전체 갱신
+      renderGoalStatus();
+      renderRecoBar();
+      initCal();
+      renderChart();
+      renderWeightStats();
+      if (selectedKey) selectDay(selectedKey);
+    } catch {
+      toast('❌ 파일 형식이 올바르지 않아요');
+      input.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ── Init ──
+renderGoalStatus();
+renderRecoBar();
+initCal();
+renderChart();
+renderWeightStats();
+renderInjHist();
+renderInsight();
+</script>
+</body>
+</html>
