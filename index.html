@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -1200,66 +1200,163 @@ function renderWeightStats() {
 
 // ── Insight ──
 function renderInsight() {
-  const ws = DB.g('hc_weights');
-  const entries = Object.entries(ws).sort((a,b) => a[0].localeCompare(b[0]));
-  const P = DB.g('hc_period');
-  const E = DB.g('hc_exercises');
-
-  const box = document.getElementById('insight-box');
-  if (!box) return; // reco-bar가 아직 렌더링 안 됐을 때
-
-  const setText = t => { box.textContent = t; };
-
-  if (entries.length < 2) {
-    setText('체중을 2일 이상 기록하면 인사이트가 표시됩니다.');
-    return;
-  }
-
-  const latest = entries[entries.length-1][1];
+  const ws   = DB.g('hc_weights');
+  const P    = DB.g('hc_period');
+  const E    = DB.g('hc_exercises');
+  const D    = DB.g('hc_diets');
   const goal = DB.goal();
 
-  // 생리 주기 체크
+  const box = document.getElementById('insight-box');
+  if (!box) return;
+
+  // ── 1. 생리 주기 ──
   const periodDates = Object.keys(P).sort();
-  const lastPeriod = periodDates.length ? periodDates[periodDates.length-1] : null;
-  const daysSincePeriod = lastPeriod
+  const lastPeriod  = periodDates.length ? periodDates[periodDates.length - 1] : null;
+  const daysSince   = lastPeriod
     ? Math.floor((new Date(todayStr) - new Date(lastPeriod)) / 86400000)
     : null;
 
-  if (daysSincePeriod !== null) {
-    if (daysSincePeriod >= 0 && daysSincePeriod <= 4) {
-      setText(`🩸 생리 ${daysSincePeriod+1}일차 — 체중 증가는 수분 보유 때문이에요. 걱정 마세요!`); return;
-    }
-    if (daysSincePeriod >= 5 && daysSincePeriod <= 13) {
-      setText(`🌱 여포기(${daysSincePeriod+1}일차) — 대사 활발, 운동 효과가 가장 좋은 시기예요!`); return;
-    }
-    if (daysSincePeriod >= 14 && daysSincePeriod <= 17) {
-      setText(`🥚 배란기 — 체온·체중 소폭 상승 가능. 수분 충분히 드세요.`); return;
-    }
-    if (daysSincePeriod >= 18 && daysSincePeriod <= 30) {
-      setText(`🌙 황체기(${daysSincePeriod+1}일차) — 부종으로 체중 증가 가능. 생리 후 자연히 빠져요.`); return;
+  let cycleTag = '';
+  let cycleTip = '';
+
+  if (daysSince !== null && daysSince >= 0 && daysSince <= 35) {
+    if (daysSince <= 4) {
+      cycleTag = `🩸 생리 ${daysSince + 1}일차`;
+      const tips = [
+        '체중 증가는 수분 보유 때문이니 걱정 마세요.',
+        '오늘은 무리하지 말고 스트레칭 위주로 움직여요.',
+        '철분·마그네슘 섭취에 신경 써주세요.',
+        '따뜻한 음식과 충분한 수분이 도움돼요.',
+        '컨디션 먼저 — 운동은 몸 상태 보며 결정해요.',
+      ];
+      cycleTip = tips[daysSince % tips.length];
+    } else if (daysSince <= 13) {
+      cycleTag = `🌱 여포기 ${daysSince + 1}일차`;
+      const tips = [
+        '대사가 활발해서 운동 효과가 가장 좋은 시기예요.',
+        '에스트로겐 상승으로 근력 운동 회복도 빨라요.',
+        '고강도 운동 도전하기 좋은 타이밍이에요!',
+        '기분·에너지 모두 좋은 시기 — 루틴 늘려봐요.',
+        '지방 연소 효율이 높으니 유산소도 효과적이에요.',
+        '새로운 운동 종목 시도하기 딱 좋은 주기예요.',
+      ];
+      cycleTip = tips[(daysSince - 5) % tips.length];
+    } else if (daysSince <= 17) {
+      cycleTag = `🥚 배란기 ${daysSince + 1}일차`;
+      const tips = [
+        '체온·체중 소폭 상승 가능. 수분 충분히 드세요.',
+        '피부 트러블이 생길 수 있어요. 수분 섭취 늘려요.',
+        '에너지 피크 — 오늘 운동 강도를 높여봐요!',
+        '배란통이 있다면 가벼운 걷기 정도가 좋아요.',
+      ];
+      cycleTip = tips[(daysSince - 14) % tips.length];
+    } else if (daysSince <= 30) {
+      cycleTag = `🌙 황체기 ${daysSince + 1}일차`;
+      const tips = [
+        '부종으로 체중 증가 가능. 생리 후 자연히 빠져요.',
+        '식욕이 늘어나는 시기 — 단백질 위주로 채워요.',
+        '무거운 운동보다 요가·필라테스가 더 좋아요.',
+        '초콜릿이 당기면 다크초콜릿 소량으로 마그네슘 보충!',
+        '나트륨 줄이면 부종 완화에 도움돼요.',
+        '스트레스 호르몬 높아지는 시기 — 수면을 챙겨요.',
+      ];
+      cycleTip = tips[(daysSince - 18) % tips.length];
     }
   }
 
-  // 일반 체중 추이
-  const recent = entries.slice(-7);
-  const diff7 = +(recent[recent.length-1][1] - recent[0][1]).toFixed(1);
-  const weekStart = (() => {
-    const d = new Date(); d.setDate(d.getDate() - d.getDay() + 1);
-    return d.toISOString().slice(0,10);
-  })();
-  const exThisWeek = Object.keys(E).filter(k => k >= weekStart).length;
-
-  if (diff7 > 1.5) { setText(`📈 최근 7일 +${diff7}kg. 나트륨·탄수화물 점검 필요. 이번 주 운동 ${exThisWeek}회.`); return; }
-  if (diff7 < -1)  { setText(`📉 최근 7일 ${diff7}kg 감량! 좋은 흐름이에요 💪 이번 주 운동 ${exThisWeek}회.`); return; }
-  if (Math.abs(diff7) <= 0.5 && recent.length >= 5) {
-    setText(goal && goal.weight && latest > goal.weight
-      ? `➡️ 체중 정체 중. 칼로리 목표 재점검하거나 운동 강도를 높여보세요.`
-      : `✅ 체중 안정 유지 중. 이번 주 운동 ${exThisWeek}회 — 꾸준히 가고 있어요!`);
-    return;
+  // ── 2. 7일 체중 추이 ──
+  const wEntries = Object.entries(ws).sort((a, b) => a[0].localeCompare(b[0]));
+  const recent7  = wEntries.slice(-7);
+  let weightMsg  = '';
+  if (recent7.length >= 2) {
+    const diff7 = +(recent7[recent7.length - 1][1] - recent7[0][1]).toFixed(1);
+    const sign  = diff7 > 0 ? '+' : '';
+    if (daysSince !== null && daysSince <= 4 && diff7 > 0) {
+      weightMsg = `체중 ${sign}${diff7}kg은 생리 영향이 커요.`;
+    } else if (daysSince !== null && daysSince >= 18 && daysSince <= 30 && diff7 > 0) {
+      weightMsg = `체중 ${sign}${diff7}kg — 황체기 수분 보유 영향 가능성 있어요.`;
+    } else if (diff7 > 1.5) {
+      weightMsg = `📈 7일 ${sign}${diff7}kg. 나트륨·탄수화물을 점검해봐요.`;
+    } else if (diff7 < -1) {
+      weightMsg = `📉 7일 ${diff7}kg 감량! 좋은 흐름이에요 💪`;
+    } else if (Math.abs(diff7) <= 0.3) {
+      weightMsg = `체중 안정적으로 유지 중이에요.`;
+    } else {
+      weightMsg = `7일 체중 변화 ${sign}${diff7}kg.`;
+    }
   }
-  setText(`💡 최근 7일 ${diff7>0?'+':''}${diff7}kg 변화. 이번 주 운동 ${exThisWeek}회.`);
+
+  // ── 3. 최근 3일 칼로리·단백질 ──
+  let totalKcal = 0, totalProtein = 0, loggedDays = 0;
+  for (let i = 0; i < 3; i++) {
+    const d = new Date(todayStr);
+    d.setDate(d.getDate() - i);
+    const dt   = d.toISOString().slice(0, 10);
+    const rows = D[dt];
+    if (rows && rows.length) {
+      totalKcal    += rows.reduce((s, r) => s + (r.kcal    || 0), 0);
+      totalProtein += rows.reduce((s, r) => s + (r.protein || 0), 0);
+      loggedDays++;
+    }
+  }
+  let dietMsg = '';
+  if (loggedDays > 0) {
+    const avgKcal    = Math.round(totalKcal    / loggedDays);
+    const avgProtein = Math.round(totalProtein / loggedDays);
+    const kcalGoal   = goal && goal.kcal    ? goal.kcal    : null;
+    const protGoal   = goal && goal.protein ? goal.protein : null;
+    const kcalStr    = kcalGoal
+      ? (avgKcal > kcalGoal * 1.1  ? `칼로리 평균 ${avgKcal}kcal(목표 초과)`
+       : avgKcal < kcalGoal * 0.85 ? `칼로리 평균 ${avgKcal}kcal(목표 미달)`
+                                   : `칼로리 평균 ${avgKcal}kcal(목표 달성)`)
+      : `칼로리 평균 ${avgKcal}kcal`;
+    const protStr    = protGoal
+      ? (avgProtein >= protGoal ? `단백질 ${avgProtein}g ✅` : `단백질 ${avgProtein}g(목표 ${protGoal}g)`)
+      : `단백질 ${avgProtein}g`;
+    dietMsg = `최근 ${loggedDays}일 ${kcalStr}, ${protStr}.`;
+  }
+
+  // ── 4. 7일 운동 분석 ──
+  const sevenAgo = new Date(todayStr);
+  sevenAgo.setDate(sevenAgo.getDate() - 6);
+  const sevenAgoStr = sevenAgo.toISOString().slice(0, 10);
+  const recentEx    = Object.entries(E).filter(([k]) => k >= sevenAgoStr);
+  const exCount     = recentEx.length;
+  const exTypes     = [...new Set(recentEx.flatMap(([, v]) => v.types || []))];
+  const typeStr     = exTypes.length ? `(${exTypes.join('·')})` : '';
+  let exMsg = '';
+  if (exCount >= 5)      exMsg = `7일 운동 ${exCount}회 ${typeStr} — 정말 꾸준해요! 🔥`;
+  else if (exCount >= 3) exMsg = `7일 운동 ${exCount}회 ${typeStr} — 좋은 페이스예요 💪`;
+  else if (exCount >= 1) exMsg = `7일 운동 ${exCount}회 ${typeStr} — 조금 더 늘려봐요!`;
+  else                   exMsg = `이번 주 아직 운동 기록이 없어요. 오늘 시작해봐요!`;
+
+  // ── 5. 일별 로테이션 팁 ──
+  const dayOfYear = Math.floor((new Date(todayStr) - new Date(new Date(todayStr).getFullYear(), 0, 0)) / 86400000);
+  const dailyTips = [
+    '💧 물 2L 마셨나요? 체중 감량의 기본이에요.',
+    '🥗 채소를 먼저 먹으면 혈당 스파이크를 줄일 수 있어요.',
+    '😴 수면 7시간 이상이 체중 관리의 핵심이에요.',
+    '🧂 나트륨을 줄이면 부종이 빠져요. 오늘 국물 반만!',
+    '🚶 식후 10분 걷기만 해도 혈당 조절에 도움돼요.',
+    '💪 근육 1kg이 하루 50kcal를 추가로 태워줘요.',
+    '🍳 아침 단백질이 하루 식욕 조절에 도움돼요.',
+    '📸 식사 사진을 찍으면 과식 예방에 효과적이에요.',
+    '🫁 스트레스는 코르티솔을 올려 지방 축적을 쉽게 해요.',
+    '🍵 식전 물 한 잔이 포만감을 높여줘요.',
+    '🏃 유산소+근력 병행이 체지방 감량에 가장 효과적이에요.',
+    '🌿 식이섬유 20g 이상이 장 건강과 다이어트에 도움돼요.',
+  ];
+
+  // ── 조합 ──
+  const parts = [];
+  if (cycleTag)  parts.push(`${cycleTag} — ${cycleTip}`);
+  if (weightMsg) parts.push(weightMsg);
+  if (dietMsg)   parts.push(dietMsg);
+  parts.push(exMsg);
+  if (!dietMsg && !weightMsg) parts.push(dailyTips[dayOfYear % dailyTips.length]);
+
+  box.textContent = parts.join('  ·  ');
 }
-
 // ── Helpers ──
 function ok() {
   const el = document.getElementById('saved-ok');
